@@ -1,0 +1,78 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+  <!--<meta charset="UTF-8">-->
+  <!--<title>Sweet Alert</title>-->
+  <!--<link rel="script" href="sweetalert.css">-->
+<!--</head>-->
+<!--<body>-->
+
+<!--<a>click here</a>-->
+
+<!--<script src="sweetalert.min.js"></script>-->
+<!--<script src="jquery-3.2.1.js"></script>-->
+<!--<script>-->
+  <!--$("a").click(function () {-->
+    <!--swal({-->
+      <!--title: "Error!",-->
+      <!--text: "Here's my error message!",-->
+      <!--type: "error",-->
+      <!--confirmButtonText: "Cool"-->
+    <!--});-->
+  <!--});-->
+
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .progress-box {
+            width: 300px;
+            height: 20px;
+            border: solid 1px greenyellow;
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 20px;
+            background-color: greenyellow;
+        }
+
+    </style>
+</head>
+<body>
+<div class="progress-box">
+    <div class="progress-bar"></div>
+</div>
+<span class="progress-num">0</span><span>%</span>
+
+</body>
+<script src="jquery-3.2.1.js"></script>
+<script>
+    //定义一个函数，修改进度条宽度
+    var i = 0;
+    var num = 0;
+    function bar() {
+        $(".progress-bar").css("width", i);
+        i += 3;
+        $(".progress-num").text(num);
+        num += 1;
+        if (num === 101) {
+            clearInterval(id);
+        }
+    }
+
+    function start() {
+        id = setInterval(bar, 100);
+
+    }
+
+    start();
+
+</script>
+

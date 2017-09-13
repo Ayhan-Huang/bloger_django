@@ -1,0 +1,38 @@
+
+<ul class="articles">
+    {% for article in articles %}
+        <li class="article">
+            <div class="article-title">
+                <a href="/blog/{{ article.username }}/p/{{ article.nid }}">{{ article.title }}</a>
+            </div>
+            <div class="article-content">
+                <div class="article-thumbnail">
+                    <a href="#">
+                        <img class="img-rounded profile-thumbnail" src="{{ article.blog.user.avatar.url }}" width=60px height=60px>
+                    </a>
+                </div>
+                <div class="article-body">
+                    {{ article.desc }}
+                </div>
+            </div>
+            <div class="article-footer">
+                <span class="article-user">
+{#                    <a href="/blog/{{ article.blog.user.username }}">{{ article.blog.user.username }}</a> 反向查询的方式，下面是自定义方法，更简单 #}
+                    <a href="/blog/{{ article.username }}">{{ article.username }}</a>
+                </span>
+                <span class="">发布于{{ article.create_time }}</span>
+                <span>
+                <!-- 点击评论，跳转到该文章的评论区 -->
+{#                <a href="{% url 'article' id=article.id %}#comments">#}
+                <a href="/blog/{{ article.username }}/p/{{ article.nid }}#comments_start">
+                    评论({{ article.comment_count }})</a>
+                </span>
+                <!-- 显示评论数量；#comments是url片段，将跳转到目标url，并将页面定位在id="comments"的元素处 -->
+                {#                <span><a href="{% url 'article' id=article.id %}">阅读(article.reads)</a></span>#}
+                <span><a href="#">阅读({{ article.read_count }})</a></span>
+            </div>
+        </li>
+    {% empty %}
+        <li><h3>没有内容的荒漠···</h3></li>
+    {% endfor %}
+</ul>

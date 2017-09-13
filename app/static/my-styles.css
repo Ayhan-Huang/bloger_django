@@ -1,0 +1,86 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    padding-top: 40px;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* article清单样式 */
+ul.articles {
+    list-style: none;
+}
+
+ul.articles li {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px dotted #ccc;
+    padding-bottom: 10px;
+}
+
+.article-title {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.article-thumbnail {
+    padding: 1px;
+    margin-top: 10px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    float: left;
+}
+
+.article-body {
+    padding: 6px;
+}
+
+.article-footer {
+    text-align: left;
+}
+
+/*  注册界面头像上传样式 */
+.file-avatar {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.sol {
+    position: absolute;
+    top: 0;
+    left: 30px;
+    width: 60px;
+    height: 60px;
+}
+
+#file-choose {
+    opacity: 0;
+}
+
+/*   注册表单样式  */
+#register div.form-group {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.error-info {
+    color: red;
+}
+
+#register button {
+    margin-top: 15px;
+}
+
+/* post清单样式 */
+
+/* 文章样式 */
+.post-body {
+    text-align: justify;
+    text-indent: 30px;
+}

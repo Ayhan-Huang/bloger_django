@@ -1,0 +1,135 @@
+<style>
+
+    ul.comments li.comment {
+        list-style: none;
+        margin-left: 32px;
+        padding: 8px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    ul.comments li.comment:nth-child(1) {
+        border-top: 1px solid #e0e0e0;
+    }
+
+    ul.comments li.comment:hover {
+        background-color: #f0f0f0;
+    }
+
+    div.comment-date {
+        float: right;
+    }
+
+    div.comment-user {
+        font-weight: bold;
+    }
+
+    div.comment-thumbnail {
+        float: left;
+    }
+
+    div.comment-content {
+        margin-left: 70px;
+        min-height: 48px;
+    }
+
+    div.comment-footer {
+        margin-top: 6px;
+    }
+
+    div.comment-body {
+        margin-top: 6px;
+    }
+</style>
+
+<ul class="comments">
+    {% for comment in comments %}
+        <li class="comment" id="{{ comment.nid }}">
+            <div class="comment-thumbnail">
+                <a href="/blog/{{ comment.user.username }}">
+                    <img class="img-rounded profile-thumbnail" src="{{ comment.user.avatar.url }}" width=60px
+                         height=60px>
+                </a>
+            </div>
+            <div class="comment-content">
+
+                <div class="comment-date">{{ comment.create_time }}</div>
+                <div class="comment-user">
+                    <a href="/blog/{{ comment.user.username }}">
+                        {{ comment.user.nickname }}</a>
+                </div>
+                <div class="comment-body">
+                    {% if comment.parent_comment %}
+                        <a href="#{{ comment.parent_comment.nid }}">@</a>{{ comment.parent_comment.user.nickname }}: {{ comment.parent_comment.content }}
+                    {% endif %}
+                    <div></div>
+                    {{ comment.content }}
+                </div>
+                <div class='comment-footer'>
+                    <a href="#id_comment_body" class="reply">回复</a>
+                    <a class="comment-up"> <i
+                            class="fa fa-thumbs-o-up"></i>&nbsp;赞(<span>{{ comment.up_count }}</span>)</a>
+                </div>
+            </div>
+        </li>
+    {% empty %}
+        <h3 class="no-comment">还没有人评论，来抢第一个！</h3>
+    {% endfor %}
+</ul>
+
+<script>
+    {#    $("a.comment-up").click(function () {#}
+    $("ul.comments").on("click", "a.comment-up", function () {
+        //用事件委派的方式，这样前端新增的评论才能有绑定事件
+        var comment_id = $(this).parent().parent().parent().attr("id");
+        console.log('点赞id'+comment_id);
+        var ele = $(this);
+        $.ajax({
+            url: "{% url 'comment_poll' %}",
+            type: "GET",
+            data: {
+                {#                "comment_id": {{ comment.nid }} //评论有很多个，这个方式无法获取具体是哪个#}
+                "comment_id": comment_id
+            },
+            success: function (res) {
+                var response = JSON.parse(res);
+                if (response['login']) {
+                    location.href = response['login'];
+                } else if (response['error']) {
+                    swal(response["error"]);
+                } else {
+                    console.log(response["up"]);    //这里没问题
+                    {#                    console.log( $(this).children("span"));#} //这里的this变了,因此赋值对象有问题
+                    ele.children("span").text(response["up"]);
+                }
+            }
+        })
+    });
+
+    {#    $("a.reply").click(function () {#}
+    $("ul.comments").on("click", "a.reply", function () {
+        //事件委派
+        // 确认是否登陆
+        $.ajax({
+            url: "{% url 'write_comment' %}",
+            success: function (res) {
+                response = JSON.parse(res);
+                if (response['login']) {
+                    location.href = response['login'];
+                }
+            }
+        });
+
+
+        //获取当前评论作为父级评论，并赋值给POST.HTML 的parent_comment_id
+        parent_comment_id = $(this).parent().parent().parent().attr("id");
+        console.log('父评论的id...' + parent_comment_id);
+        var parent_comment_content = $(this).parent().prev().prev().children().text().trim(); //获取父级评论的用户名
+        //跳转到评论框 a标签锚 配合滚动到合适位置，@父级评论
+        $(document.body).animate({
+            'scrollTop': $('#comments_start').offset().top
+        }, 300);
+        var prompt = "@" + parent_comment_content + "\n";
+        $('#id_comment_body').val(prompt); //为输入框赋值@user 显示
+
+    })
+</script>

@@ -1,0 +1,267 @@
+{% include 'blog.html' %}
+
+<style>
+    .post-body {
+        text-align: justify;
+        text-indent: 30px;
+    }
+
+    a.to-top {
+        display: none;
+        width: 30px;
+        height: 50px;
+        line-height: 50px;
+        background-color: darkgray;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        text-align: center;
+        font-weight: bold;
+        font-size: x-large;
+    }
+</style>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-9">
+            <div class="post-area">
+                <div class="post-title">
+                    <h1>{{ article.title }}</h1>
+                    <hr>
+                </div>
+                <div class="post-body">
+                    <p>{{ article.content|linebreaks }}</p>
+                    {#  linebreaks 匹配换行符  #}
+                </div>
+                <div class="post-icons">
+                    <hr>
+
+                    <a class="btn btn-info article-up">
+                        <i class="fa fa-thumbs-o-up"></i>&nbsp;顶（<span id="a">{{ article.up_count }}</span>）</a>
+                    <a class="btn btn-danger article-down">
+                        <i class="fa fa-thumbs-o-down"></i>&nbsp;踩（<span id="b">{{ article.down_count }}</span>）</a>
+                    <a href="/follow/{{ bloger.nid }}" class="btn btn-warning" id="bloger-follow">
+                        <i class="fa fa-magnet"></i>&nbsp;关注我（<span class="follow-user">{{ comment.followers }}</span>）</a>
+
+                </div>
+            </div>
+            <br>
+            <!-- 写评论 -->
+            <div id="comments_start"></div>
+            <div class="post-comments">
+                <h2>评论列表</h2>
+                <form class="comment">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="id_comment_body"></label>
+                        {{ comment_form.comment_body }}
+                    </div>
+                    <P>
+                        <button class="btn btn-primary" type="submit">发表评论</button>
+                        &nbsp;<span></span>
+                    </P>
+                </form>
+            </div>
+            <br>
+            <!-- 评论列表 开始 -->
+            <div class="comment_list">
+                {% include '_comments.html' %}
+            </div>
+            <div id="comments_end"></div>
+            <!-- 评论列表 结束 -->
+            <!-- 评论分页 开始 -->
+            {% if pagination %}
+                <div class="pagination">
+                    <ul class="pagination">
+                        {% if comments.has_previous %}
+                            <li>
+                                <a href="/blog/{{ article.username }}/p/{{ article.nid }}/?page={{ comments.previous_page_number }}#comments_start"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true"><<</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="disabled">
+                                <a href="#" aria-label="Previous">
+                                    <span aria-hidden="true"><<</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for page in pagination.page_range %}
+                            <!-- iter_pages()迭代器，返回页数列表，-->
+                            {% if page == currentPage %}<!-- 当前页 高亮 -->
+                                <li class="item active">
+                                    <a href="/blog/{{ article.username }}/p/{{ article.nid }}/?page={{ page }}#comments_start">{{ page }}</a>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <a href="/blog/{{ article.username }}/p/{{ article.nid }}/?page={{ page }}#comments_start">{{ page }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if comments.has_next %}
+                            <li>
+                                <a href="/blog/{{ article.username }}/p/{{ article.nid }}/?page={{ comments.previous_page_number }}#comments_start"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">>></span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="disabled">
+                                <a href="#" aria-label="Next">
+                                    <span aria-hidden="true">>></span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+            <!-- 评论分页 结束 -->
+
+        </div>
+
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">Panel heading without title</div>
+                <div class="panel-body">
+                    Panel content
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Panel title</h3>
+                </div>
+                <div class="panel-body">
+                    Panel content
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a class="to-top">&and;</a>
+
+    <script>
+
+        parent_comment_id = ''; //对评论评论时给它赋值,判断是对文章评论还是对评论评论的标志
+
+        prompt = "";
+        $('#id_comment_body').val(prompt); //为输入框赋值@user 显示
+
+        $("a.article-up").click(function () {
+            $.ajax({
+                url: "{% url 'article_poll' %}",
+                type: "GET",
+                data: {
+                    "article_id": {{ article.nid }},
+                    "flag": 1
+                },
+                success: function (res) {
+                    var response = JSON.parse(res);
+                    if (response['login']) {        //JS如果键不存在，不会报错
+                        location.href = response['login'];
+                    } else if (response['error']) {
+                        swal(response["error"]);
+                    } else {
+                        $("#a").text(response["up"]);
+                        $("#b").text(response["down"]);
+                    }
+                }
+            })
+        });
+
+        $("a.article-down").click(function () {
+            $.ajax({
+                url: "{% url 'article_poll' %}",
+                type: "GET",
+                data: {
+                    "article_id": {{ article.nid }},
+                    "flag": 0
+                },
+                success: function (res) {
+                    var response = JSON.parse(res);
+                    if (response['login']) {
+                        location.href = response['login'];
+                    } else if (response['error']) {
+                        swal(response["error"]);
+                    } else {
+                        $("#a").text(response["up"]);
+                        $("#b").text(response["down"]);
+                    }
+                }
+            })
+        });
+
+        $("form.comment").submit(function (e) {
+            e.preventDefault();
+            var raw_comment_body = $("#id_comment_body").val();
+            var index = raw_comment_body.indexOf("\n") + 1; //根据黄行付分割前缀
+            var comment_body = raw_comment_body.substr(index); //根据换行符，将@name前缀去掉，然后发给server.
+            $.ajax({
+                url: "{% url 'write_comment' %}",
+                type: "POST",
+                data: {
+                    "article_id": {{ article.nid }},
+                    "comment_body": comment_body,
+                    "csrfmiddlewaretoken": $("[name='csrfmiddlewaretoken']").val(),
+                    "parent_comment_id": parent_comment_id
+                },
+                success: function (res) {
+                    try {
+                        var response = JSON.parse(res); //如果后端发来的是render响应HTML字符串，那么这里的JSON.parse异常，通过异常捕获
+                        if (response['errors']) {
+                            for (var i in response['errors']) {
+                                // 创建span标签，并赋值错误信息
+                                var $span = $("<span>").attr({"style": "color: red"}).text(response['errors'][i][0]);
+                                $span.addClass("errors");
+                                $("form.comment button").next().after($span);
+                            }
+                            setTimeout(function () {
+                                $("span.errors").remove(); //两秒后自动删除错误提示；也可以隐藏$("span.errors").text("")
+                            }, 2000)
+                        }
+                        if (response['login']) {
+                            location.href = response['login'];
+                        }
+                    } catch (e) {
+                        //前端新建一条评论
+                        console.log(e);
+                        console.log('json解析异常,说明后端发送的html');
+                        //判断，如果是第一条评论，就将"还没有人评论，来抢第一个！"的提示信息清除
+                        if ($("h3.no-comment")) {
+                            $("h3.no-comment").remove();
+                        }
+                        $("ul.comments").append(res);
+                        //滚动到评论最后, 下面这种方式只能滚动一次
+                        // function scrollToHash(hash) {
+                        //     location.hash = '#' + hash;
+                        // }
+                        // scrollToHash("comments_end");
+                        // 下面这种效果完美
+                        $(document.body).animate({
+                            'scrollTop': $('#comments_end').offset().top
+                        }, 500);
+                        //清空输入框，对parent_comment_id赋初始值
+                        $("#id_comment_body").val("");
+                        parent_comment_id = "";
+                    }
+                }
+            })
+        });
+
+        $(window).scroll(function () {   //监听窗口滚动
+            if ($(window).scrollTop() > 200) {
+                //滚动条位置到达设置的临界值时
+                $("a.to-top").show();
+            } else {
+                $("a.to-top").hide();
+            }
+        });
+
+        $("a.to-top").click(function () {
+            $(window).scrollTop(0);
+        })
+    </script>
+
+</div>
+

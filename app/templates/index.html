@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+    <div class="page">
+        <div class="page-header">
+            <h1>你好啊,
+                {% if user.is_authenticated %}
+                    {{ user.username }}
+                {% else %}
+                    Stranger
+                {% endif %}!</h1>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                {#   分类 开始     #}
+                <div class="col-md-2">
+                    <div class="panel panel-default">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading">网站分类</div>
+                        <!-- List group -->
+                        <ul class="list-group">
+
+                            <!-- 这里的分类有index传参，然后for循环 -->
+                            {% if current_type_choice == 0 %}
+                                <li class="active list-group-item"><a href="{% url 'index' %}">All<span class="sr-only">(current)</span></a>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item"><a href="{% url 'index' %}">All<span class="sr-only">(current)</span></a>
+                                </li>
+                            {% endif %}
+
+                            {% for type_choice in type_choices %}
+                                {% if type_choice.1 == current_type_choice %}
+                                    <li class="active list-group-item"><a
+                                            href="/type/{{ type_choice.1 }}">{{ type_choice.1 }}</a></li>
+                                    <!-- href="/app/.. app前面一定要加/, 否则url路径会不断堆叠" -->
+                                {% else %}
+                                    <li class="list-group-item"><a
+                                            href="/type/{{ type_choice.1 }}">{{ type_choice.1 }}</a></li>
+{#                                            href="/blog/{{ type_choice.0 }}">{{ type_choice.1 }}</a></li>#}
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+
+
+                    </div>
+                </div>
+                {#       分类 结束     #}
+
+                {#      博文 开始      #}
+                <div class="col-md-7">
+                    {% include "_articles.html" %}
+                    {#      博文 结束      #}
+                    <!-- 分页 开始 -->
+                    {% if pagination %}
+                        <div class="pagination">
+                            <ul class="pagination">
+                                {% if articles.has_previous %}
+                                    <li>
+                                        <a href="{% if not current_type_choice_id %}/index{% else %}/app/{{ current_type_choice_id }}{% endif %}/?page={{ articles.previous_page_number }}"
+                                           aria-label="Previous">
+                                            <span aria-hidden="true"><<</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="disabled">
+                                        <a href="#" aria-label="Previous">
+                                            <span aria-hidden="true"><<</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% for page in pagination.page_range %}
+                                    <!-- iter_pages()迭代器，返回页数列表，-->
+                                    {% if page == currentPage %}<!-- 当前页 高亮 -->
+                                        <li class="item active">
+                                            <a href="{% if not current_type_choice_id %}/index{% else %}/app/{{ current_type_choice_id }}{% endif %}/?page={{ page }}"
+                                            >{{ page }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            <a href="{% if not current_type_choice_id %}/index{% else %}/app/{{ current_type_choice_id }}{% endif %}/?page={{ page }}">{{ page }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if articles.has_next %}
+                                    <li>
+                                        <a href="{% if not current_type_choice_id %}/index{% else %}/app/{{ current_type_choice_id }}{% endif %}/?page={{ articles.next_page_number }}"
+                                           aria-label="Next">
+                                            <span aria-hidden="true">>></span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="disabled">
+                                        <a href="#" aria-label="Next">
+                                            <span aria-hidden="true">>></span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <!-- 分页结束 -->
+                </div>
+
+                {# 右侧面板 开始 #}
+                <div class="col-md-3">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Panel heading without title</div>
+                        <div class="panel-body">
+                            Panel content
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Panel title</h3>
+                        </div>
+                        <div class="panel-body">
+                            Panel content
+                        </div>
+                    </div>
+
+                </div>
+                {# 右侧面板 结束 #}
+
+            </div>
+
+        </div>
+
+
+    </div>
+{% endblock %}
+

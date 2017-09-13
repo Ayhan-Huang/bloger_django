@@ -1,0 +1,60 @@
+
+<style>
+    ul.posts {
+    list-style: none;
+}
+
+ul.posts li {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+.post-title {
+    font-size: 16px;
+    font-weight: bold;
+    border-bottom: solid 1px rgb(225,225,225);
+}
+
+.post-body {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.post-footer {
+    padding-bottom: 10px;
+}
+</style>
+
+<ul class="posts">
+    {% for article in articles %}
+        <li class="post">
+            <div class="post-title">
+                <a href="/blog/{{ article.username }}/p/{{ article.nid }}">{{ article.title }}</a>
+            </div>
+            <div class="post-content">
+                <div class="post-body">
+                    {{ article.desc|truncatewords:30 }}
+                </div>
+            </div>
+            <div class="post-footer">
+                <span class="post-user">
+                    <a href="/blog/{{ article.blog.user.username }}">{{ article.username }}</a>
+                </span>
+                <span>发布于{{ article.create_time|date:"Y-m-d" }}</span>
+                <span>
+                <!-- 点击评论，跳转到该文章的评论区 -->
+{#                <a href="{% url 'article' id=article.id %}#comments">#}
+                <a href="/blog/{{ article.username }}/p/{{ article.nid }}#comments_start">
+                    评论({{ article.comment_count }})</a>
+                </span>
+                <!-- 显示评论数量；#comments是url片段，将跳转到目标url，并将页面定位在id="comments"的元素处 -->
+                {#                <span><a href="{% url 'article' id=article.id %}">阅读(article.reads)</a></span>#}
+                <a href="#">阅读({{ article.read_count }})</a>
+                <a href="#">赞({{ article.up_count }})</a>
+                <a href="#">踩({{ article.down_count }})</a>
+                <a href="#">编辑</a>
+            </div>
+        </li>
+    {% endfor %}
+</ul>

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}登录{% endblock %}
+{% block page_content %}
+    <div class="page-header">
+        <h1>Login</h1>
+    </div>
+    <div class="col-md-4">
+        <!-- 登录表单 开始 -->
+        <form action="{% url 'login' %}" method="post">
+            {% csrf_token %}
+            <p id='error' style="color: red"></p>
+            <div class="form-group hidden">
+                <label for="next_url">next_url</label>
+                <input type="text" class="form-control" id="next_url" name="next_url" value={{ next_url }}>
+                {#  将重定向的地址也发给服务端 #}
+            </div>
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="valid_code">验证码</label>
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="valid_code" name="valid_code" required>
+
+                    </div>
+                    <div class="col-md-6 valid_code">
+                        <img src="/valid_code" alt="valid_code"><a href="#">刷新</a>
+                    </div>
+                </div>
+
+            </div>
+            <p>
+                <button type="submit" class="btn btn-primary btn-block">
+                    登录
+                </button>
+            </p>
+        </form>
+        <!-- 登录表单 结束 -->
+        <br>
+        <p>忘记密码? <a href="#">点击重置密码</a>.</p>
+        <p>新用户? <a href="{% url 'register' %}">注册</a>.</p>
+    </div>
+{% endblock %}
+{% block script %}
+    <script>
+    // 点击提交按钮，ajax发送；验证成功，通过location.href = url来跳转
+    $('form').submit(function(e){
+        e.preventDefault();  //阻止默认提交
+        var username = $("[name='username']").val();    // 注意，jquery筛选一定加引号，否则报错uncaught
+        var password = $("[name='password']").val();
+        var valid_code = $("[name='valid_code']").val();
+        var next_url = $("[name='next_url']").val(); //获取登录成功后的跳转地址
+        console.log(username, password, valid_code);
+        $.ajax({
+            url: "{% url 'login' %}",
+            type: "POST",
+            data: {
+                "username": username,
+                "password": password,
+                "valid_code": valid_code,
+                "csrfmiddlewaretoken": $("[name='csrfmiddlewaretoken']").val()
+            },
+            success: function(res) {
+                response = JSON.parse(res);
+                if (response['errors']) {
+                    $('#error').html(response['errors']);
+                    //更新验证码;
+                    $("div.valid_code img")[0].src+="?";  //利用JS DOM元素img的属性, 重新赋值
+                    setTimeout(function(){  //定时清空错误信息
+                        $('#error').text("")
+                    },2500)
+                } else {
+                    swal({
+                        title:'登录成功',
+                        text: "好久不见,"+response['user']+"! 即将跳转回之前浏览页面...",
+                        timer: 2500,
+                        type: "success"
+                      }, function() {
+                        location.href = next_url;   //登录成功，跳转; 要放在swal函数内，否则会立即跳转
+                      });
+                }
+            }
+        })
+    });
+
+    $("div.valid_code a").click(function () {
+        $("div.valid_code img")[0].src+="?";
+    })
+
+
+    </script>
+{% endblock %}
+
+
+
+
+
+

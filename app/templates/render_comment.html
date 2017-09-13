@@ -1,0 +1,28 @@
+<li class="comment" style="margin-left: 32px" id="{{ comment.nid }}">
+    <div class="comment-thumbnail">
+        <a href="/blog/{{ comment.user.username }}">
+            <img class="img-rounded profile-thumbnail" src="{{ comment.user.avatar.url }}" width=60px
+                 height=60px>
+        </a>
+    </div>
+    <div class="comment-content">
+        <div class="comment-date">{{ comment.create_time }}</div>
+        <div class="comment-user">
+            <a href="/blog/{{ comment.user.username }}">
+                {{ comment.user.nickname }}</a>
+        </div>
+        <div class="comment-body">
+            {% if comment.parent_comment %}
+                <a href="#{{ comment.parent_comment.nid }}">@</a>{{ comment.parent_comment.user.nickname }}:
+                {{ comment.parent_comment.content }}
+            {% endif %}
+            <div></div>
+            {{ comment.content }}
+        </div>
+        <div class='comment-footer'>
+            <a href="#id_comment_body" class="reply">回复</a>
+            <a class="comment-up"> <i
+                    class="fa fa-thumbs-o-up"></i>&nbsp;赞(<span>{{ comment.up_count }}</span>)</a>
+        </div>
+    </div>
+</li>

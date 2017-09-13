@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+/* 如果不加这个，下面的staic报错 */
+
+{% block title %}注册{% endblock %}
+
+<style>
+    .reg-button {
+        margin-top: 20px;
+    }
+</style>
+
+{% block page_content %}
+    <div class="page-header">
+        <h1>Register</h1>
+    </div>
+    <div class="col-md-4">
+        <!-- 注册表单 开始 -->
+        <form action="{% url 'register' %}" method="post" id="register">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_email">邮箱&nbsp;</label><span class="error-info"></span>
+                {{ form_obj.email }}
+<!--  span 标签用于放置错误信息 -->
+            </div>
+
+            <div class="form-group">
+                <label for="id_username">用户名&nbsp;</label><span class="error-info"></span>
+                {{ form_obj.username }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">密码&nbsp;</label><span class="error-info"></span>
+                {{ form_obj.password }}
+            </div>
+
+             <div class="form-group">
+                <label for="id_password2">确认密码&nbsp;</label><span class="error-info"></span>
+                 {{ form_obj.password2 }}
+            </div>
+
+            <div class="form-group file-avatar">
+                <label for="file-img">头像</label>
+                <img src="{% static 'img/default.jpg' %}" alt="" id="file-img" class="sol">
+                <input type="file" id='file-choose' class="sol">
+            </div>
+<!--   通过绝对定位并设置宽高，令 上传按钮和图片重合，然后设置按钮透明度 -->
+            <div class="form-group">
+                <label for="id_valid_code" class="valid_code">验证码&nbsp;</label><span class="error-info"></span>
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form_obj.valid_code }}
+                    </div>
+                    <div class="col-md-6 valid_code">
+                        <img src="/valid_code" alt="valid_code">&nbsp;<a class="refresh">刷新</a>
+                    </div>
+                </div>
+            </div>
+
+            <p class="reg-button">
+                <button type="submit" class="btn btn-primary btn-block">
+                    注册
+                </button>
+            </p>
+        </form>
+        <!-- 注册表单 结束 -->
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+
+     // 显示头像预览，在用户本地实现：拿到头像DOM对象 - - 转化为路径
+        // - - 利用FileReader文件阅读器；
+        // 利用onchange事件，每次用户重新选择了文件，改变预览
+        $('#file-choose').change(function() {
+            var reader = new FileReader(); //实例化对象
+            var first_file = $(this)[0].files[0]; //$(this)0那个JQ对象集合的具体对象，files[0]取到DOM对象 ----拿到文件对象
+            reader.readAsDataURL(first_file); //文件对象转化为路径对象
+
+            reader.onload=function(){
+                $("#file-img")[0].src = this.result //这里的this是reader对象
+            }
+        });
+
+
+    $("#register").submit(function(e){
+        e.preventDefault();
+        var email = $("#id_email").val();
+        var username = $("#id_username").val();
+        var password = $("#id_password").val();
+        var password2 = $("#id_password2").val();
+        var valid_code = $('#id_valid_code').val();
+        console.log(email, username, password, password2, valid_code);
+
+        //ajax上传二进制文件：FormData  HTML5 的文件上传
+        var formdata = new FormData(); //实例化对象
+        formdata.append("email", email); //添加数据
+        formdata.append("username", username); //添加数据
+        formdata.append("password", password); //添加数据
+        formdata.append("password2", password2); //添加数据
+        formdata.append("valid_code", valid_code); //添加数据
+        formdata.append("img", $("#file-choose")[0].files[0]); //添加数据
+        formdata.append("csrfmiddlewaretoken", $("[name='csrfmiddlewaretoken']").val()); //添加数据
+
+
+        //发送数据：
+        $.ajax({
+            url: "{% url 'register' %}",
+            type: "POST",
+            data: formdata, //发送上面的对象
+            processData: false, //告诉jQuery不要处理发送的数据
+            contentType: false, //告诉jQuery不要去设置Content-Type请求头
+            success: function (res) {
+                res = JSON.parse(res);
+                if (res['user']){
+{#                if (res){#}
+                    location.href = "{% url 'login' %}";
+                } else { //显示错误信息
+                    console.log(res['errors']);
+                    var errors_dict = res['errors'];
+                    for (var i in errors_dict) {    //千万不要使用 for( var i, j in dict)这种形式来循环字典，不支持！！！
+                        if (i =='valid_code') {
+                            $('label.valid_code').next().text(errors_dict[i][0])
+                        } else if (i=="__all__") { //全局的错误，额外处理
+                            $("#id_password2").prev().text(errors_dict[i][0])
+                        } else {
+                            $("#id_"+i).prev().text(errors_dict[i][0]);
+                        //因为form_obj表单对象渲染的元素有id属性:id="id_fieldname"
+                        }
+                    }
+                    //设置定时清除
+                    setTimeout(function () {
+                        $("span.error-info").text("");
+                    },3000);
+
+                // 更新验证码，选中验证码dom对象，重新赋值
+                    $(".valid_code img")[0].src += "?";
+                }
+            }
+        });
+    });
+
+    $(".refresh").click(function () {
+        $("div.valid_code img")[0].src+="?";
+    })
+
+    </script>
+{% endblock %}
+
+
+
+
+
+

@@ -1,0 +1,109 @@
+{#{% extends "blog.html" %}#}
+{##}
+{#{% block content %}#}
+{#    {% include "_posts.html" %}#}
+{#{% endblock %}#}
+
+{% include "blog.html" %}
+{% load staticfiles %}
+{% load myFilter %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">博主信息</div>
+                <div class="panel-body">
+                    <p><img class="img-responsive img-rounded" src="{{ bloger.avatar.url }}" alt=""></p>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item">昵称：{{ bloger.nickname }}</li>
+                    <li class="list-group-item">园龄：{{ bloger.create_time|date_to_now }}</li>
+                    <li class="list-group-item">粉丝：{{ followers }}</li>
+                    <li class="list-group-item">关注：{{ followeds }}</li>
+                </ul>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">我的标签</div>
+                <ul class="list-group">
+                    {% for tag in tag_details %}
+                        <li class="list-group-item"><a href="/blog/{{ bloger.username }}/articles/tag/{{ tag.0 }}">
+                            {{ tag.0 }}({{ tag.1 }})</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">随笔分类</div>
+                <ul class="list-group">
+                    {% for category in category_details %}
+                        <li class="list-group-item"><a
+                                href="/blog/{{ bloger.username }}/articles/category/{{ category.0 }}">
+                            {{ category.0 }}({{ category.1 }})</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">随笔档案</div>
+                <ul class="list-group">
+                    {% for key, value in date_archives.items %}
+                        <li class="list-group-item"><a href="/blog/{{ bloger.username }}/articles/date/{{ key }}">
+                            {{ key }}&nbsp;({{ value }})
+                        </a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="col-md-9">
+            {% include "_posts.html" %}
+
+            {% if pagination %}
+                <div class="pagination">
+                    <ul class="pagination">
+                        {% if articles.has_previous %}
+                            <li>
+                                <a href="/blog/{{ article.username }}/p/{{ article.nid }}/?page={{ articles.previous_page_number }}"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true"><<</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="disabled">
+                                <a href="#" aria-label="Previous">
+                                    <span aria-hidden="true"><<</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for page in pagination.page_range %}
+                            <!-- iter_pages()迭代器，返回页数列表，-->
+                            {% if page == currentPage %}<!-- 当前页 高亮 -->
+                                <li class="item active">
+                                    <a href="/blog/{{ article.username }}/p/{{ article.nid }}/?page={{ page }}">{{ page }}</a>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <a href="/blog/{{ article.username }}/p/{{ article.nid }}/?page={{ page }}">{{ page }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if articles.has_next %}
+                            <li>
+                                <a href="/blog/{{ article.username }}/p/{{ article.nid }}/?page={{ articles.previous_page_number }}"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">>></span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="disabled">
+                                <a href="#" aria-label="Next">
+                                    <span aria-hidden="true">>></span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
