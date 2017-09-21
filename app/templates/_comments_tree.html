@@ -1,0 +1,111 @@
+<style>
+
+    div.comments div.comment {
+        list-style: none;
+        margin-left: 32px;
+        padding: 8px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    div.comments div.comment:nth-child(1) {
+        border-top: 1px solid #e0e0e0;
+    }
+
+    div.comments div.comment:hover {
+        background-color: #f0f0f0;
+    }
+
+    div.comment-date {
+        float: right;
+    }
+
+    div.comment-user {
+        font-weight: bold;
+    }
+
+    div.comment-thumbnail {
+        float: left;
+    }
+
+    div.comment-content {
+        margin-left: 70px;
+        min-height: 48px;
+    }
+
+    div.comment-footer {
+        margin-top: 6px;
+    }
+
+    div.comment-body {
+        margin-top: 6px;
+    }
+</style>
+
+<div class="comments">
+
+</div>
+
+<script>
+
+    String.prototype.format= function(){     //格式化字符串函数
+               var args = arguments;
+               return this.replace(/\{(\d+)\}/g,function(s,i){
+                 return args[i];
+               });
+        };
+
+    function comment_tree(comment_list) {
+        var html = "";
+        $.each(comment_list, function(i, comment_obj){
+            var comment_str =
+                '<div class="comment" id="{0}">'.format(comment_obj['nid']); //多级评论用div盒子嵌套；最后一个</div>不闭合，直到循环完所有子评论;
+            var temp = '<div class="comment-thumbnail">'+
+                            '<img  src="/media/{1}" height=60px width=60px>'+
+                        '</div>'+
+                        '<div class="comment-content">'+
+                            '<div class="comment-date">{2}</div>'+
+                            '<div class="comment-user"><a href="/blog/{3}">{4}</a></div>'+
+                             '<div class="comment-body">{5}</div>'+
+                            '<div class="comment-footer">'+
+                                    '<a href="#id_comment_body" class="reply">回复</a>'+
+                                    '<a class="comment-up"><i class="fa fa-thumbs-o-up"></i>&nbsp;赞(<span>{6}</span>)</a>'+
+                            '</div>'+
+                        '</div>';
+            temp = temp.format(
+                comment_obj['user__username'],
+                comment_obj['user__avatar'],
+                comment_obj['create_time'],
+                comment_obj['user__username'], //如何获取用户名和昵称，后端跨表查询
+                comment_obj['user__nickname'],
+                comment_obj['content'],
+                comment_obj['up_count']);
+            // 注意，如果format没有生效，检查下{ } 是不是中文状态；{0}这种形式就没有问题；
+            //索引一定要从0开始
+            //src 能否找到图片，通过将url放到地址栏来看：http://127.0.0.1:8000/media/upload/avatar/se1.png
+            comment_str += temp;
+            if (comment_obj["children"]) {
+                comment_str += comment_tree(comment_obj["children"])
+            }
+            comment_str  += '</div>';   //如果评论有子评论，就在上面的if处递归；然后层层闭合div.comment, 形成一个嵌套结构；
+            html += comment_str; //html累加评论div
+        });
+
+        //if (html == "") {
+           // html = '<h3 class="no-comment">还没有人评论，来抢第一个！</h3><br>'}
+        return html;
+    }
+
+    $(function() {
+        $.ajax({
+            url: "", //默认不写就是当前地址
+            type: "GET",
+            success: function(res) {
+                var comment_list = JSON.parse(res);
+                var html = comment_tree(comment_list);
+                console.log(html);
+                $('div.comments').append(html)
+            }
+        })
+    })
+
+</script>

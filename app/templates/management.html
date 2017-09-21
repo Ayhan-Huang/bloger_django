@@ -1,0 +1,107 @@
+{% include 'blog.html' %}
+
+<style>
+    body {
+        padding-top: 40px;
+    }
+</style>
+
+<div class="container">
+    <div class="page-header">
+        <h1>博客管理</h1>
+    </div>
+    <div class="row">
+        <div class="col-md-2">
+            <button type="button" class="btn btn-primary btn-block" id="add">
+                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>&nbsp;&nbsp;写新文章
+            </button>
+        </div>
+        <div class="col-md-3 pull-right">
+            <form class="form-inline text-right" action="/search/" method="post">
+                <input type="text" class="form-control" placeholder="请输入文章标题..." name="search">
+                <button type="submit" class="btn btn-default">
+                    <i class="fa fa-search" aria-hidden="true"></i></button>
+            </form>
+        </div>
+    </div>
+    <!-- 清单 开始 -->
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>标题</th>
+            <th>阅读</th>
+            <th>评论</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for article in articles %}
+            <tr>
+                <td>
+                    <div class="post-title">
+                        <a href="/blog/{{ article.username }}/p/{{ article.nid }}/">{{ article.title }}</a>
+                    </div>
+                </td>
+                <td>
+                    {{ article.read_count }}
+                </td>
+                <td>
+                    {{ article.comment_count }}
+                </td>
+                <td>
+                    <button class="del btn btn-danger btn-xs" id={{ article.nid }}>删除</button>
+                    <a href="/blog/{{ bloger.username }}/management/edit/{{ article.nid }}/">
+                        <button type="button" class="edit btn btn-info btn-xs">编辑</button>
+                    </a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td><h3>没有内容的荒漠......</h3></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <!-- 清单 结束 -->
+</div>
+
+<script>
+    // 删除文章
+    $('table').on("click", "button.del", function (res) {
+        //优化，swal，二次确认再删除
+        var article_id = $(this).attr("id");
+        var record = $(this).parent().parent();
+        swal({
+                title: "你确定?",
+                text: "文章将被永久删除，此操作不可恢复!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "是的，删除!",
+                cancelButtonText: "容我三思",
+                closeOnConfirm: false
+                // 设置closeOnConfirm: false，下面二次确认按钮被点击后才会关闭模态框
+                //上面的按钮被点击，下面的函数才会执行
+            },
+            function () {
+                $.ajax({
+                    url: "/blog/{{ bloger.username }}/management/del/",
+                    data: {
+                        "article_id": article_id
+                    },
+                    success: function (res) {
+                        console.log(res);
+                        //执行前端删除
+                        record.remove();
+                    }
+                });
+                swal({
+                    title: "删除！",
+                    text: "你的文件已被删除",
+                    type: "success"
+                })
+            });
+    })
+
+
+</script>

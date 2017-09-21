@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect, HttpResponse
 from .models import *
-# from .models import UserInfo, Article, *
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.contrib import auth
@@ -218,17 +217,17 @@ def home(request, sitename, **kwargs):
             print('日期分类文章清单是')
 
         # 分页
-        pagination = Paginator(articles, 10)
-        page = request.GET.get('page', 1)
-        currentPage = int(page)
-        articles = pagination.page(page)
+        # pagination = Paginator(articles, 10)
+        # page = request.GET.get('page', 1)
+        # currentPage = int(page)
+        # articles = pagination.page(page)
 
         return render(request, 'home.html', {"bloger": bloger,
                                                  "category_details": category_details,
                                                  "tag_details": tag_details,
                                                  "date_archives": date_archives,
-                                                "pagination": pagination,
-                                                "currentPage": currentPage,
+                                                # "pagination": pagination,
+                                                # "currentPage": currentPage,
                                                 "articles": articles,})
     else:
         return render(request, '404.html')
@@ -241,6 +240,47 @@ def article(request,sitename, article_id):
         comment_form = CommentForm()
         bloger = article.bloger
         comments = article.comments
+
+        ################################ 利用了列表是可变数据类型，
+        # 拿到根评论，根评论下加一个子评论a
+        # 子评论下如果加了子评论b，根评论由于是引用的a的内存地址，a的内存地址中引用了b，
+        # 所以根评论也能拿到b
+        comment_list = article.comments.values("nid", "content", "create_time",
+                                               "up_count", "parent_id_id", "user__username",
+                                               "user__nickname", "user__avatar") # 根据前端需要显示的内容，选择分组字段 ；avtar前端加上media也可以拼出绝对路径
+        # 没有的字段通过跨表查询来做,比如上面的："user__username", "user__nickname", "user__avatar"
+        # （values正向跨表：外键__关联表字段； 正向直接查询：obj.外键.关联表字段）
+        # 时间格式无法json: 转化为字符串,舍弃多余的秒数：
+        for comment in comment_list:
+            comment['create_time'] = str(comment['create_time'])[:16]
+        # 添加children键，值为空列表
+        # 添加nid值作为Key，comment作为值
+        # 有序字典存放：
+        import collections
+        res = collections.OrderedDict()
+        for comment in comment_list:
+            comment["children"] = []
+            res[comment['nid']] = comment
+        # {1:{'nid':1, 'content":...., 'children': []}}, 2: {,,[]}}}  - - 这样的结构可以避免下面的两次for循环，提高性能
+        # 过滤根评论
+        root =[]
+        for i in res:
+            if res[i]["parent_id_id"]: # 有父评论，添加到父评论的children下
+                pid = res[i]["parent_id_id"] #父评论id
+                res[pid]["children"].append(res[i]) # 父评论的chilren下添加子评论
+            else:
+                root.append(res[i]) # 获取根评论
+        print('-----------------------')
+        print(root) # bejson校验没问题！
+
+        # 前端载入后，$(function()(}载入后，立刻请求ajax
+        # 后台返回上面的root评论树型结构
+        # 前端定义一个函数，拼接递归root中评论，将返回值添加到评论区即可
+
+        if request.is_ajax():
+            return HttpResponse(json.dumps(root))
+
+
         # 分页
         # pagination = Paginator(comments, 10)
         # page = request.GET.get('page', 1)
@@ -411,6 +451,188 @@ def write_comment(request): # 写评论：文章, 评论内容，用户
     # httpresponse不能json, 不支持的格式；
     # 因此需要一个办法在前端判断，是直接接收render字符串响应，还是json响应；前者直接当html元素添加到页面，后者解析；
     # 异常捕捉搞定
+
+
+@login_required
+def write_article(request,sitename):
+    print('访问了。。。。write_article')
+    # 传入标签，分类，type
+    user = UserInfo.objects.filter(username=sitename).first()
+    bloger = user
+    blog = user.blog
+    tags=blog.tags
+    category = blog.category
+    type_choices = Article.type_choices
+
+    if request.method == 'POST':
+        article_title = request.POST.get("article_title")
+        article_content = request.POST.get("article_body")
+        # 剔除用户可能输入的非法标签
+        from bs4 import BeautifulSoup
+        bs = BeautifulSoup(article_content, "html.parser")
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+                        'h1', 'h2', 'h3', 'p']
+        article_content=""
+        for tag in bs.find_all():
+            if tag.name not in allowed_tags:
+                tag.decompose() # 过滤非法标签及内容
+            article_content += str(tag)
+        print('文章内容是...',article_content)
+
+        tags_choose = request.POST.getlist('tags_choose')
+        # 获取tags对象
+        tag_list = []
+        for tag in tags_choose:
+            tag_list.append(Tag.objects.filter(title=tag).first())
+
+        category_choose = request.POST.get("category_choose")
+        category = Category.objects.filter(title=category_choose).first()
+
+        type_choose = request.POST.get('type_choose')
+        # 获取article_type_id
+        article_type_id = 0
+        for type in type_choices:
+            if type[1] == type_choose:
+                article_type_id=type[0]
+                print('article_type_id....',article_type_id)
+
+        article_desc = request.POST.get('article_desc')
+        if not article_desc:
+            article_desc = article_content[:100]
+            print(article_desc)
+        new_article = Article(title=article_title,
+                              desc=article_desc,
+                              blog=blog,
+                              category=category,
+                              article_type_id=article_type_id,
+                              )
+        new_article.save()
+        ArticleDetail.objects.create(article_id=new_article.nid,content=article_content)
+        l = []
+        for tag in tag_list:
+            l.append(Article2Tag(tag_id=tag.nid,article_id=new_article.nid))
+        Article2Tag.objects.bulk_create(l)
+
+        return redirect('/blog/{sitename}/p/{article_id}'.format(sitename=new_article.blog.user.username, article_id=new_article.nid))
+        # 重定向这个url， 对article视图发起请求，article中完成了其它传参，比如文章的评论
+
+    else:
+        return render(request, 'write_article.html', {
+                                                    "bloger":bloger,
+                                                    "tags": tags,
+                                                    "category": category,
+                                                    "type_choices": type_choices})
+
+
+@login_required
+def management(request, sitename):
+    print('访问了。。。。management')
+    bloger = UserInfo.objects.filter(username=sitename).first()
+    current_blog = bloger.blog
+    articles = current_blog.article_set.all()  # 当前站点下的所有文章
+    return render(request, 'management.html', {"bloger": bloger,
+                                                    "articles": articles})
+
+
+@login_required
+def delete_article(request, sitename):
+    print('访问了删除函数')
+    article_id = request.GET.get('article_id')
+    article = Article.objects.filter(nid=article_id).first()
+    # article.delete()
+    print(article.title)
+    return HttpResponse(article_id)
+
+
+@login_required
+def edit_article(request, sitename, article_id):
+    article_qs = Article.objects.filter(nid=article_id)
+    article = article_qs.first()
+    user = UserInfo.objects.filter(username=sitename).first()
+    bloger = user
+    blog = user.blog
+    tags = blog.tags
+    category = blog.category
+    type_choices = Article.type_choices
+
+    if request.method == 'POST':
+
+        # 获取用户提交；通过update更改数据；对于多对对关系，先clear， 在重新add
+        article_title = request.POST.get("article_title")
+        article_content = request.POST.get("article_body")
+        # 剔除用户可能输入的非法标签
+        from bs4 import BeautifulSoup
+        bs = BeautifulSoup(article_content, "html.parser")
+        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+                        'h1', 'h2', 'h3', 'p']
+        article_content = ""
+        for tag in bs.find_all():
+            if tag.name not in allowed_tags:
+                tag.decompose()  # 过滤非法标签及内容
+            article_content += str(tag)
+        print('文章内容是...', article_content)
+
+        tags_choose = request.POST.getlist('tags_choose')
+        # 获取tags对象
+        tag_list = []
+        for tag in tags_choose:
+            tag_list.append(Tag.objects.filter(title=tag).first())
+
+        category_choose = request.POST.get("category_choose")
+        category = Category.objects.filter(title=category_choose).first()
+
+        type_choose = request.POST.get('type_choose')
+        # 获取article_type_id
+        article_type_id = 0
+        for type in type_choices:
+            if type[1] == type_choose:
+                article_type_id = type[0]
+                print('article_type_id....', article_type_id)
+
+        article_desc = request.POST.get('article_desc')
+
+        # article.
+
+    else:
+        print('访问了编辑函数')
+        # 获取文章的标签，分类，type
+        current_tags = article.tags.all()
+        current_category = article.category
+        type_choices = Article.type_choices
+        current_type= ''
+        for type in type_choices:
+            if article.article_type_id == type[0]:
+                current_type = type[1]
+
+        return render(request, 'edit_article.html', {"article": article,
+                                                        "bloger": bloger,
+                                                         "tags": tags,
+                                                         "category": category,
+                                                         "type_choices": type_choices,
+                                                        "current_tags": current_tags,
+                                                        "current_category": current_category,
+                                                        "current_type": current_type})
+
+
+@login_required
+def upload_file(request):
+    # 拿到文件，保存在指定路径
+    print(request.FILES) # {'imgFile': [<InMemoryUploadedFile: QQ图片20170523192846.jpg (image/jpeg)>]}
+    imgFile = request.FILES.get('imgFile')  # 拿到文件对象，imgFile.name, 拿到文件名
+    with open('app/media/upload/img/'+imgFile.name,'wb')as f:   # with open 无法创建文件夹，需要自己创建
+        for chunk in imgFile.chunks():
+            f.write(chunk)
+    # 返回json响应
+    response = {
+        'error': 0,
+        'url': '/media/upload/img/'+imgFile.name
+        # 客户端拿到路径，才能预览图片; media在setting中配置了别名，这里只写media，客户端就可以找到路径，前面不需要加/app
+    }
+    return HttpResponse(json.dumps(response))
+
+
 
 
 

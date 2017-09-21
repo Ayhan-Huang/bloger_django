@@ -1,4 +1,5 @@
 {% include 'blog.html' %}
+{% load staticfiles %}
 
 <style>
     .post-body {
@@ -30,8 +31,9 @@
                     <hr>
                 </div>
                 <div class="post-body">
-                    <p>{{ article.content|linebreaks }}</p>
-                    {#  linebreaks 匹配换行符  #}
+                    {#                    <p>{{ article.content|linebreaks }}</p>#}
+                    <p>{{ article.articledetail.content|safe|linebreaks }}</p>
+                    {# 通过自定义方法content查询报错；改为连表查询正确了；过滤器连用，safe渲染标签，linebreaks 匹配换行符  #}
                 </div>
                 <div class="post-icons">
                     <hr>
@@ -66,6 +68,8 @@
             <!-- 评论列表 开始 -->
             <div class="comment_list">
                 {% include '_comments.html' %}
+                <h3>多级评论样式：</h3>
+{#                {% include '_comments_tree.html' %}#}
             </div>
             <div id="comments_end"></div>
             <!-- 评论列表 结束 -->
@@ -141,12 +145,29 @@
 
     <a class="to-top">&and;</a>
 
+    <script src="{% static 'kindeditor-4.1.10/kindeditor-all-min.js' %}"></script>
     <script>
+
+        var options = {
+            resizeType: 0,
+            uploadJson: "/upload/", //指定图片上传的url路径，server端写一个视图来处理上传的图片
+            extraFileUploadParams: {
+                "csrfmiddlewaretoken": "{{ csrf_token }}"
+            },
+            items: [
+                'undo', 'redo', 'plainpaste', '|', 'subscript', 'superscript', '|',
+                'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold',
+                'italic', 'underline', 'strikethrough', '|', 'image', 'table', 'hr', 'emoticons',
+                'link'
+            ]
+        };
+       // var myEditor = KindEditor.create("form.comment textarea", options); //为指定元素创建富文本编辑器
 
         parent_comment_id = ''; //对评论评论时给它赋值,判断是对文章评论还是对评论评论的标志
 
-        prompt = "";
-        $('#id_comment_body').val(prompt); //为输入框赋值@user 显示
+{#        prompt = "";#}
+{#        $('#id_comment_body').val(prompt); //为输入框赋值@user 显示#}
+{#        myEditor.html(promt);#}
 
         $("a.article-up").click(function () {
             $.ajax({
@@ -195,7 +216,9 @@
         $("form.comment").submit(function (e) {
             e.preventDefault();
             var raw_comment_body = $("#id_comment_body").val();
-            var index = raw_comment_body.indexOf("\n") + 1; //根据黄行付分割前缀
+            //var raw_comment_body = myEditor.html();
+            console.log('============',raw_comment_body);
+            var index = raw_comment_body.indexOf("\n") + 1; //根据换行符分割前缀
             var comment_body = raw_comment_body.substr(index); //根据换行符，将@name前缀去掉，然后发给server.
             $.ajax({
                 url: "{% url 'write_comment' %}",
@@ -231,7 +254,8 @@
                         if ($("h3.no-comment")) {
                             $("h3.no-comment").remove();
                         }
-                        $("ul.comments").append(res);
+                        $("ul.comments").append(res);   //@ 形式评论用
+                        // $("div.comments").append(res);  //多级评论用这个
                         //滚动到评论最后, 下面这种方式只能滚动一次
                         // function scrollToHash(hash) {
                         //     location.hash = '#' + hash;

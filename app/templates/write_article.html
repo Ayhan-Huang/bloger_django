@@ -1,0 +1,66 @@
+{% include 'blog.html' %}
+{% load staticfiles %}
+
+<style>
+    div.container {
+        width: 960px;
+    }
+
+    textarea {
+        width: 100%;
+    }
+</style>
+
+<div class="container">
+    <form action="/blog/{{ request.user.username }}/write_article/" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="article_title">文章标题</label>
+            <input type="text" class="form-control" id="article_title" name="article_title" required>
+        </div>
+        <div class="form-group">
+            <label for="article_body">文章内容</label>
+            <textarea class="form-control" rows="30" id="article_body" name="article_body"></textarea>
+        </div>
+        <div class="form-group"><label>文章标签</label><br>
+            {% for tag in tags %}
+                <label class="checkbox-inline">
+                    <input type="checkbox" name="tags_choose" value="{{ tag.title }}"> {{ tag.title }}
+                </label>
+            {% endfor %}
+        </div>
+        <div class="form-group"><label>个人分类</label><br>
+            {% for cate in category %}
+                <label class="radio-inline">
+                    <input type="radio" name="category_choose" value="{{ cate.title }}"> {{ cate.title }}
+                </label>
+            {% endfor %}
+        </div>
+        <div class="form-group"><label>文章分类</label><br>
+            {% for type in type_choices %}
+                <label class="radio-inline">
+                    <input type="radio" name="type_choose" value="{{ type.1 }}"> {{ type.1 }}
+                </label>
+            {% endfor %}
+        </div>
+        <div class="form-group">
+            <label for="article_desc">文章摘要</label><span class="gray">（默认自动提取您文章的前100字显示在博客首页作为文章摘要，您也可以在这里自行编辑 ）</span>
+            <textarea class="form-control" rows="5" id="article_desc" name="article_desc"></textarea>
+        </div>
+        <p>
+            <button class="btn btn-primary center-block">发表文章</button>
+        </p>
+    </form>
+</div>
+
+<script src="{% static 'kindeditor-4.1.10/kindeditor-all-min.js' %}"></script>
+<script>
+    var options = {
+        resizeType: 0,
+        uploadJson: "/upload/", //指定图片上传的url路径，server端写一个视图来处理上传的图片
+        extraFileUploadParams: {
+            "csrfmiddlewaretoken": "{{ csrf_token }}"
+        }
+    };
+    KindEditor.create("#article_body", options); //为指定元素创建富文本编辑器
+</script>

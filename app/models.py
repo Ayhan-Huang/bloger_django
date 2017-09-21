@@ -56,6 +56,16 @@ class Blog(models.Model):
     site = models.CharField(verbose_name='个人博客后缀', max_length=32, unique=True)
     theme = models.CharField(verbose_name='博客主题', max_length=32)
     user = models.OneToOneField(to='UserInfo', to_field='nid')
+
+    # 取博客下多个标签
+    @property
+    def tags(self):
+        return Tag.objects.filter(blog_id=self.nid)
+
+    @property
+    def category(self): # 取博客的分类
+        return Category.objects.filter(blog_id=self.nid)
+
     def __str__(self):
         return self.title
 
@@ -126,7 +136,7 @@ class ArticleDetail(models.Model):
     """
     文章详细表
     """
-    nid = models.AutoField(primary_key=True,default=1)
+    nid = models.AutoField(primary_key=True)
     content = models.TextField(verbose_name='文章内容', )
 
     article = models.OneToOneField(verbose_name='所属文章', to='Article', to_field='nid')

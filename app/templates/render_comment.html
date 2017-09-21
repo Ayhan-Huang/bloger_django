@@ -1,4 +1,4 @@
-<li class="comment" style="margin-left: 32px" id="{{ comment.nid }}">
+<div class="comment" style="margin-left: 32px" id="{{ comment.nid }}">
     <div class="comment-thumbnail">
         <a href="/blog/{{ comment.user.username }}">
             <img class="img-rounded profile-thumbnail" src="{{ comment.user.avatar.url }}" width=60px
@@ -25,4 +25,4 @@
                     class="fa fa-thumbs-o-up"></i>&nbsp;赞(<span>{{ comment.up_count }}</span>)</a>
         </div>
     </div>
-</li>
+</div>

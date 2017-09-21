@@ -53,7 +53,7 @@ class CommentForm(forms.Form):
                                    error_messages={"required":["请输入有效的评论！"]},   # 自定义输入为空时的错误信息
                                    widget=forms.Textarea(attrs={"class": "form-control",
                                                                          "rows": "3",
-                                                                         "placeholder": "留下你的评论吧...提示，请勿输入空评论，或非法词汇，比如【垃圾,菜鸟,和谐】"}))
+                                                                         "placeholder": "请勿输入空评论，或非法词汇，比如：'垃圾,菜鸟,和谐', 否则无法提交"}))
 
     def clean_comment_body(self):  # 验证用户输入
         forbidden = ["垃圾","菜鸟","和谐"]

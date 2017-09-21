@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^comment_poll/', views.comment_poll, name='comment_poll'),
     url(r'^write_comment/', views.write_comment, name='write_comment'),
     url(r'^follow/(?P<bloger>\w+)', views.follow),
+    url(r'^upload/$', views.upload_file, name='upload_file'),
     # url(r'^accounts/login/$', 'django.contrib.auth.views.login',{'template_name': 'login.html'}),
 
 

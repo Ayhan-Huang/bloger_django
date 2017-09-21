@@ -15,16 +15,16 @@
     <script src="{% static 'jquery-3.2.1.js' %}"></script>
     <script src="{% static 'bootstrap-3.3.7/dist/js/bootstrap.js' %}"></script>
     <script src="{% static 'sweetalert-master/dist/sweetalert.min.js' %}"></script>
-<style>
-    body {
-        padding-top: 100px;
-    }
+    <style>
+        body {
+            padding-top: 100px;
+        }
 
-    a {
-        text-decoration: none;
-    }
+        a {
+            text-decoration: none;
+        }
 
-</style>
+    </style>
 
 </head>
 
@@ -45,10 +45,14 @@
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-left">
                 <li class="my-navbar-left"><a href="{% url 'index' %}">首页</a></li>
-                </ul>
+            </ul>
 
             <ul class="nav navbar-nav navbar-right">
                 {% if request.user.is_authenticated %}
+{#                    {% if request.user.username == bloger.username %}#}
+                        <li><a href="/blog/{{ request.user.username }}/write_article/">写新文章</a></li>
+                        <li><a href="/blog/{{ request.user.username }}/management/">管理博客</a></li>
+{#                    {% endif %}#}
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                             你好，{{ user.username }}<b class="caret"></b>
